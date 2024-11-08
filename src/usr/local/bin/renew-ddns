@@ -1,0 +1,30 @@
+#!/bin/bash
+hostname=$1
+config_file="/etc/he-net/${hostname}.conf"
+log_file="/var/log/renew-ddns.log"
+
+# Set the number of lines to keep in the log file
+KEEP_LINES=30
+
+# Write the logs to the log file, keeping only the last 20 lines
+
+write_log() {
+	echo "$1"
+	echo "$1" >> "$log_file"
+	temp_file="/tmp/renew-ddns-log-cache"
+	tail -n $KEEP_LINES "$log_file" > "$temp_file"
+	cat "$temp_file" > "$log_file"
+	rm -f $temp_file
+}
+
+if [ ! -f "$config_file" ]; then
+	write_log "ERROR: $(date) Configuration $config_file is missing..."
+  exit 1;
+fi
+
+. "$config_file"
+
+result=$(curl -4 "http://$hostname:$ip_update_key@dyn.dns.he.net/nic/update?hostname=$hostname")
+write_log "$(date) - $hostname: $result"
+
+~                      

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+domain=${CERTBOT_DOMAIN/\*\./}
+
+# load acme_pass value for the domain
+. "/etc/certbot/${domain}.conf"
+
+curl "https://dyn.dns.he.net/nic/update" \
+    -d "hostname=_acme-challenge.$domain" \
+    -d "password=$acme_pass" \
+    -d "txt=${CERTBOT_VALIDATION}"
+
+# Wait for dns to renew
+while true; do
+  current_value=$(/usr/bin/dig -t txt _acme-challenge.$domain +short | xargs)
+  if [ "$current_value" = "$CERTBOT_VALIDATION" ]; then
+    break
+  fi
+  sleep 5
+done
+

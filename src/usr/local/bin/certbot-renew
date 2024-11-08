@@ -1,0 +1,6 @@
+#!/bin/bash
+
+certbot renew --preferred-challenges=dns \
+  --manual-auth-hook /usr/local/bin/dns-he-net-auth \
+  --renew-hook 'docker exec apache2 apachectl -k graceful' \
+  > /var/log/letsencrypt/custom.log
